@@ -161,14 +161,14 @@ def get_fritzbox_logs():
     if log_entries:
         save_logs_to_db(log_entries)
 
-        if __debug__: # Print results when actively developing
-            for entry in log_entries:        
-                date = entry.get('date')
-                time = entry.get('time')
-                type = entry.get('group')
-                ref = entry.get('id')
-                message = entry.get('msg')
-                print(date, time, type, ref, message)
+        # if __debug__: # Print results when actively developing
+        #     for entry in log_entries:        
+        #         date = entry.get('date')
+        #         time = entry.get('time')
+        #         type = entry.get('group')
+        #         ref = entry.get('id')
+        #         message = entry.get('msg')
+        #         print(date, time, type, ref, message)
     else:
         print("Warnung: Keine Log-Einträge gefunden.")
 
