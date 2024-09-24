@@ -1,0 +1,16 @@
+version: "3.3"
+services:
+  fritzbox-log-webview:
+    container_name: fritzbox-log-webview
+    environment:
+      - USER=your-tr64-user
+      - PASSWORD=your-password
+      - URL=http://192.168.178.1
+      - IGNORE_LOG_ID=500,501,503,504,505,506,3420,3421
+    ports:
+      - 5588:5588
+    volumes:
+      - /volume1/docker/fritzbox-log-webview:/app/data
+    network_mode: bridge
+    restart: always
+    image: protekdev/fritzbox-log-webview:latest

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FritzBox Logs</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /*  !important = color addons wont adjust this color */
+        body {
+            background-color: #161819 !important;
+            color: #bbb6ad !important;
+        }
+
+        /* Spezifische Tabelle mit der Klasse .table-bordered */
+        table.table-bordered {
+            color: #bbb6ad !important;
+            border-color: #495057 !important; /* Rahmenfarbe der Tabelle */
+            border-width: 2px; /* Stärke der Rahmenlinie */
+        }
+
+        /* Rahmen für die Zellen der Tabelle */
+        table.table-bordered th, table.table-bordered td {
+            border-color: #495057 !important; /* Rahmenfarbe der Zellen */
+            border-width: 2px; /* Rahmenbreite der Zellen */
+        }
+        
+        .yellow-text {
+            color: rgb(255, 208, 0) !important;
+        }
+
+        .red-text {
+            color: red !important;
+        }
+
+        .default-text {
+            color: #bbb6ad !important;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        /* Hintergrundfarbe für Dropdown-Boxen */
+        select.form-control {
+            background-color: #181a1b !important;
+            color: #ffffff; /* Optional: Textfarbe in den Dropdown-Boxen, um Lesbarkeit zu gewährleisten */
+            border: 1px solid #383d3f; /* Optional: Eine passende Rahmenfarbe */
+        }
+
+        /* Hintergrundfarbe für den nächsten Aktualisierungs-Alert */
+        .alert.alert-info {
+            background-color: #143b43 !important;
+            color: #ffffff; /* Optional: Textfarbe, damit der Text gut lesbar bleibt */
+            border-color: #143b43; /* Optional: Anpassen der Randfarbe des Alerts */
+        }
+    </style>
+    <script>
+        function updateFilters() {
+            document.getElementById('filterForm').submit();
+        }
+
+        function confirmRestart() {
+            if (confirm("Möchten Sie die FritzBox wirklich neu starten?")) {
+                document.getElementById('restartForm').submit();
+            }
+        }
+
+        // Überprüfe, ob countdown bereits deklariert wurde, um eine mehrfache Deklaration zu verhindern
+        if (typeof countdown === 'undefined') {
+            // Countdown-Logik
+            var countdown = { countdown,int };  // Sichere Einbettung der Zahl in JavaScript
+        }
+
+        function updateCountdown() {
+            if (countdown > 0) {
+                countdown--;
+                let minutes = Math.floor(countdown / 60);
+                let seconds = countdown % 60;
+                document.getElementById('countdown').innerText = minutes + "m " + (seconds < 10 ? "0" + seconds : seconds) + "s";
+            } else {
+                document.getElementById('countdown').innerText = "Aktualisierung läuft...";
+            }
+        }
+
+        setInterval(updateCountdown, 1000);  // Aktualisiere jede Sekunde
+    </script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>FritzBox Logs</h1>
+        <div class="alert alert-info">
+            Nächste Aktualisierung: {{ next_update_time }}
+        </div>
+        <div class="button-container">
+            <form action="/run_script" method="POST" class="mr-2">
+                <button type="submit" class="btn btn-primary">Skript manuell ausführen</button>
+            </form>
+            <form action="/restart_fritzbox" method="POST" id="restartForm">
+                <button type="button" class="btn btn-danger" onclick="confirmRestart()">FritzBox neu starten</button>
+            </form>
+        </div>
+
+        <form id="filterForm" method="GET" class="mb-4">
+            <div class="form-row">
+                <div class="col">
+                    <label for="time_filter">Zeitfilter</label>
+                    <select name="time_filter" id="time_filter" class="form-control" onchange="updateFilters()">
+                        <option value="all" {{ 'selected' if time_filter == 'all' }}>Alles (Letzte 1000)</option>
+                        <option value="week" {{ 'selected' if time_filter == 'week' }}>Woche</option>
+                        <option value="month" {{ 'selected' if time_filter == 'month' }}>Monat</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="type_filter">Gruppenfilter</label>
+                    <select name="type_filter" id="type_filter" class="form-control" onchange="updateFilters()">
+                        <option value="all" {{ 'selected' if type_filter == 'all' }}>Alles</option>
+                        <option value="net" {{ 'selected' if type_filter == 'net' }}>Internetverbindung</option>
+                    </select>
+                </div>
+                <div class="col align-self-end">
+                    <a href="/" class="btn btn-secondary">Sortierung zurücksetzen</a>
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-bordered mt-4">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('date')">Datum</th>
+                    <th onclick="sortTable('time')">Uhrzeit</th>
+                    <th onclick="sortTable('type')">Gruppe</th>
+                    <th onclick="sortTable('ref')">Typ</th>
+                    <th onclick="sortTable('message')">Nachricht</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr class="{% if log[3] == 10 or log[3] == 23 %}red-text{% elif log[3] == 'script' %}yellow-text{% else %}default-text{% endif %}">
+                    <td>{{ log[0] }}</td>
+                    <td>{{ log[1] }}</td>
+                    <td>{{ log[2] }}</td>
+                    <td>{{ log[3] }}</td>
+                    <td>{{ log[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function sortTable(column) {
+            const currentOrder = new URLSearchParams(window.location.search).get('sort_order') === 'ASC' ? 'DESC' : 'ASC';
+            const params = new URLSearchParams(window.location.search);
+            params.set('sort_column', column);
+            params.set('sort_order', currentOrder);
+            window.location.search = params.toString();
+        }
+    </script>
+</body>
+</html>
