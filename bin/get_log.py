@@ -84,7 +84,7 @@ def log_exists(date, time, message):
     This Functions search for duplicates.
     Even if the Time is in a specific range (+- 1 second)
     """
-    current_time = datetime.strptime(f"{date} {time}", "%d.%m.%y %H:%M:%S")
+    current_time = datetime.strptime(f"{date} {time}", "%y.%m.%d %H:%M:%S")
 
     conn = sqlite3.connect(Var.db_name)
     cursor = conn.cursor()
@@ -98,7 +98,7 @@ def log_exists(date, time, message):
 
     # Check if any existing times are within ±1 second
     for (existing_time,) in existing_times:
-        existing_datetime = datetime.strptime(f"{date} {existing_time}", "%d.%m.%y %H:%M:%S")
+        existing_datetime = datetime.strptime(f"{date} {existing_time}", "%y.%m.%d %H:%M:%S")
         if abs((existing_datetime - current_time).total_seconds()) <= 1:
             return True  # Duplicate found
         
@@ -110,7 +110,14 @@ def save_logs_to_db(log_entries):
 
     counter = 0
     for entry in log_entries:        
-        date = entry.get('date')
+        #date = entry.get('date')
+
+        date_str = entry.get('date')
+        # Konvertiere das Datum von d.m.y in ein datetime-Objekt
+        date_obj = datetime.strptime(date_str, '%d.%m.%y')
+        date = date_obj.strftime('%y.%m.%d')
+
+
         time = entry.get('time')
         type = entry.get('group')
         ref = entry.get('id')

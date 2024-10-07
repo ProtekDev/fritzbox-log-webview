@@ -86,7 +86,7 @@ def restart_fritzbox():
     cursor = conn.cursor()
 
     current_time = datetime.now(Var.timezone).strftime('%H:%M:%S')  # HH:MM:SS
-    current_date = datetime.now(Var.timezone).strftime('%d.%m.%y')  # Format: tt.mm.yy
+    current_date = datetime.now(Var.timezone).strftime('%y.%m.%d')  # Format: y.m.d
 
     cursor.execute('''INSERT INTO logs (date, time, type, ref, message)
 					  VALUES (?, ?, ?, ?, ?)''', (current_date, current_time, 'net', 'script', 'Fritzbox wird neugestartet.'))
